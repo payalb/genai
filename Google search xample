@@ -1,0 +1,39 @@
+import os
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_community.utilities import GoogleSearchAPIWrapper
+from langchain.agents import initialize_agent, Tool
+
+# 🔑 Set environment variables
+os.environ["GOOGLE_API_KEY"] = "AIz"
+os.environ["GOOGLE_CSE_ID"] = "your-google-custom-search-engine-id"
+os.environ["GOOGLE_API_KEY_CUSTOMSEARCH"] = "your-google-search-api-key"  
+# (needed if you’re using Google Programmable Search Engine)
+
+# 1. Initialize Gemini LLM
+llm = ChatGoogleGenerativeAI(
+    model="gemini-1.5-flash",
+    temperature=0.3
+)
+
+# 2. Initialize Google Search tool
+search = GoogleSearchAPIWrapper()
+
+tools = [
+    Tool(
+        name="Google Search",
+        func=search.run,
+        description="Useful for answering questions about current events or factual information from the web."
+    )
+]
+
+# 3. Create an agent that can use tools
+agent = initialize_agent(
+    tools,
+    llm,
+    agent="zero-shot-react-description",
+    verbose=True
+)
+
+# 4. Ask a grounded question
+resp = agent.run("Who won Euro 2024?")
+print(resp)
