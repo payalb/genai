@@ -1,0 +1,37 @@
+!pip install langchain langchain-openai
+
+from langchain_openai import ChatOpenAI
+from langchain.agents import create_tool_calling_agent, Tool
+from langchain.agents import AgentExecutor
+import os
+
+# Define the function
+def create_directory(dir_name: str) -> str:
+    os.makedirs(dir_name, exist_ok=True)
+    return f"Directory '{dir_name}' created successfully."
+
+# Wrap function as LangChain tool
+create_directory_tool = Tool(
+    name="create_directory",
+    func=create_directory,
+    description="Creates a new directory with specified name."
+)
+
+# Initialize the Groq model via LangChain's OpenAI wrapper
+llm = ChatOpenAI(
+    model="meta-llama/llama-4-scout-17b-16e-instruct",
+    base_url="https://api.groq.com/openai/v1",
+    api_key="gsk_"
+)
+
+# Create agent that knows how to call tools
+agent = create_tool_calling_agent(llm, [create_directory_tool])
+
+# Wrap in executor to run queries
+agent_executor = AgentExecutor(agent=agent, tools=[create_directory_tool], verbose=True)
+
+result = agent_executor.invoke({"input": "Create a folder called 'my-folder'. Inside it create folder 'test-folder'."})
+
+print(result)
+
+
